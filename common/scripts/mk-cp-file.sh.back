@@ -1,0 +1,60 @@
+#! /bin/sh
+#Usage: ./mk-cp-file.sh FILE_Name Project_Name
+
+PROJECT_RELEASE="project_release"
+PROJECT_SOURCE="project_source"
+
+#SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+#echo "脚本所在目录：$SCRIPT_DIR"
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: ./mk-cp-file.sh FILE_Name Project_Name"
+    exit 1
+fi
+
+# 最后一个参数是 Project_Name
+PROJECT_NAME="${@: -1}"
+# 除了最后一个的都是文件
+FILES=("${@:1:$#-1}")
+
+SDK_DIR=$SCRIPT_DIR/../../../
+SDK_ROOT=$(readlink -f "$SDK_DIR")
+echo "SDK_DIR: $SDK_DIR"
+echo "SDK_ROOT: $SDK_ROOT"
+
+PROJECT_ALL_DIR=$SCRIPT_DIR/../../project_all
+echo "project_all 所在目录：$PROJECT_ALL_DIR"
+
+# 检查项目是否存在
+if [[ ! -d "$PROJECT_ALL_DIR/$PROJECT_NAME" ]]; then
+    echo "Error: $PROJECT_NAME Project_Name not found!"
+		echo ""
+    echo "      ./mk-create-project.sh Project_Name"
+		echo ""
+    exit 1
+fi
+
+# 遍历所有文件
+for FILE in "${FILES[@]}"; do
+    ABS_PATH=$(readlink -f "$FILE")
+    echo "ABS_PATH: $ABS_PATH"
+
+    REL_PATH=${ABS_PATH#"$SDK_ROOT"/}
+    echo "REL_PATH: $REL_PATH"
+
+    REL_DIR=$(dirname "$REL_PATH")
+    echo "REL_DIR: $REL_DIR"
+
+		if [[ ! -d "$PROJECT_ALL_DIR/$PROJECT_NAME/$PROJECT_SOURCE/$REL_DIR" ]]; then
+				mkdir -p "$PROJECT_ALL_DIR/$PROJECT_NAME/$PROJECT_SOURCE/$REL_DIR"
+		fi
+
+    cp -r "$ABS_PATH" "$PROJECT_ALL_DIR/$PROJECT_NAME/$PROJECT_SOURCE/$REL_DIR"
+		ls -l $PROJECT_ALL_DIR/$PROJECT_NAME/$PROJECT_SOURCE/$REL_PATH
+done
+		
+echo "============================="
+echo "    cp file Succeeded !!!"
+echo "============================="
+echo ""
